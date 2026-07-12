@@ -1,0 +1,735 @@
+ <!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Travel Planner — Rooms & Transport</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = {darkMode: 'class'};</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{ --accent1:#ff7aa2; --accent2:#7c5cff; }
+    body{ font-family:Inter, system-ui, -apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial; background:#0b0d12; color:#fff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; margin:0; }
+
+    /* ---------- Front part (header + hero) styles (UPDATED) ---------- */
+    .site-wrap { max-width:1200px; margin:24px auto; padding: 0 20px; }
+    header.site-header { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:6px 0; }
+    .brand { display:flex; gap:12px; align-items:center; }
+    .brand .logo { width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--accent1),var(--accent2)); box-shadow: 0 12px 30px rgba(124,92,255,0.12); font-weight:700; }
+    .nav-links { display:flex; gap:22px; color:rgba(255,255,255,0.86); font-weight:500; }
+
+    /* Reduced min-height and padding to remove large empty left area */
+    .hero-card {
+      border-radius:18px;
+      overflow:hidden;
+      position:relative;
+      margin-top:12px;
+      padding:22px 28px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.04);
+      box-shadow: 0 40px 80px rgba(2,6,23,0.5);
+      display:flex;
+      gap:24px;
+      align-items:center;
+      min-height: 240px;
+    }
+    .hero-left { flex:1; min-width:0; z-index:2; padding-right:6px; }
+    .eyebrow { color:rgba(255,255,255,0.75); font-size:14px; margin-bottom:8px; }
+    .hero-title { font-size: clamp(2.25rem, 6vw, 4.5rem); font-weight:800; line-height:0.92; margin:0; color:#fff; text-shadow: 0 10px 30px rgba(2,6,23,0.5); }
+    .hero-sub { margin-top:14px; color:rgba(255,255,255,0.75); max-width:46ch; font-size:1.05rem; }
+    .hero-actions { margin-top:20px; display:flex; gap:12px; align-items:center; }
+    .btn-primary { padding:12px 22px; border-radius:999px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); box-shadow:0 14px 40px rgba(124,92,255,0.18); color:white; font-weight:700; border:none; cursor:pointer; }
+    .btn-ghost { padding:10px 18px; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); color:rgba(255,255,255,0.9); cursor:pointer; }
+
+    .thumbs-row { display:flex; gap:16px; align-items:flex-end; }
+    .thumb { width:120px; height:170px; border-radius:12px; overflow:hidden; background-size:cover; background-position:center; box-shadow: 0 20px 40px rgba(2,6,23,0.45); border:1px solid rgba(255,255,255,0.04); transform: translateY(12px); transition: all .28s ease; }
+    .thumb.active { transform: translateY(0); height:210px; width:140px; }
+
+    .page-indicator { margin-top:14px; display:flex; align-items:center; gap:10px; justify-content:flex-end; }
+    .indicator-bubble { width:36px; height:36px; border-radius:999px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; font-weight:700; color:rgba(255,255,255,0.9); }
+
+    .hero-bg-decor { position:absolute; inset:0; z-index:0; background-image: url('/mnt/data/146a29e0-0754-4b39-aae0-a26f1cc0919a.png'); background-size:cover; background-position:center; filter: brightness(0.43) saturate(0.95) contrast(1.02); transform:scale(1.03); transition: transform .35s ease; }
+    .hero-overlay { position:absolute; inset:0; z-index:1; background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.15)); }
+
+    /* ---------- rest of page (keep previous look & functionality) ---------- */
+    main.content { max-width:1200px; margin:28px auto; padding: 0 20px; color: #fff; }
+    .glass { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); backdrop-filter: blur(8px); border-radius:12px; padding:14px; }
+    .package-card { border-radius:10px; padding:12px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.04); }
+
+    /* select readability (fixed) */
+    select, select option { color:#0b1220 !important; background: #ffffff !important; }
+
+    .small-pill { display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.04); color:rgba(255,255,255,0.9); font-weight:600; }
+
+    /* ---------- Footer styles (new) ---------- */
+    .site-footer {
+      background: #2f4653; /* sample dark-teal background */
+      color: rgba(255,255,255,0.92);
+      padding: 40px 20px;
+      margin-top: 36px;
+    }
+    .footer-inner { max-width:1200px; margin:0 auto; display:grid; grid-template-columns: repeat(3, 1fr); gap:28px; align-items:start; }
+    .footer-col h4 { margin:0 0 12px 0; font-size:20px; font-weight:800; }
+    .footer-underline { width:36px; height:4px; background:#3fb0ff; border-radius:2px; margin:8px 0 14px 0; }
+    .footer-text { color: rgba(255,255,255,0.8); line-height:1.6; max-width:36ch; }
+    .footer-links { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+    .footer-links a { color: rgba(255,255,255,0.85); text-decoration:none; font-weight:500; }
+    .footer-bottom { border-top:1px solid rgba(0,0,0,0.12); margin-top:24px; padding-top:18px; text-align:center; color: rgba(255,255,255,0.72); font-size:14px; }
+
+    @media (max-width:900px) {
+      .footer-inner { grid-template-columns: 1fr; }
+      .site-wrap { padding: 0 14px; }
+      main.content { padding: 0 14px; }
+    }
+
+    @media (max-width: 900px){
+      .hero-card { flex-direction:column; padding:18px; }
+      .thumbs-row { justify-content:flex-start; overflow:auto; padding-bottom:6px; }
+      .thumb { width:96px; height:140px; }
+      .thumb.active { width:110px; height:160px; }
+    }
+  </style>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div class="site-wrap">
+    <!-- Header (front part) -->
+    <header class="site-header">
+      <div class="brand">
+        <div class="logo">✈️</div>
+        <div>
+          <div style="font-weight:800; font-size:18px;">TravelWise</div>
+          <div style="font-size:12px; color:rgba(255,255,255,0.75)">Plan • Explore • Book</div>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <a href="#destinations" style="text-decoration:none; color:inherit;">Destinations</a>
+        <a href="#packages" style="text-decoration:none; color:inherit;">Packages</a>
+        <a href="#contact" style="text-decoration:none; color:inherit;">Enquire</a>
+      </nav>
+    </header>
+
+    <!-- Hero / Good front part integrated -->
+    <section style="position:relative; margin-top:18px;">
+      <div class="hero-card">
+        <div class="hero-bg-decor" aria-hidden="true"></div>
+        <div class="hero-overlay" aria-hidden="true"></div>
+
+        <div class="hero-left">
+          <div class="eyebrow">Embark on the journey of a lifetime</div>
+          <h1 class="hero-title">Travel Far,<br/>Find Yourself</h1>
+          <p class="hero-sub">Discover unique curated travel packages — pristine landscapes, immersive experiences, and comfortable stays. Book easily or enquire for custom itineraries.</p>
+
+          <div class="hero-actions">
+            <button class="btn-primary" onclick="location.hash='#packages'">Start Your Adventure</button>
+            <button class="btn-ghost" onclick="location.hash='#contact'">Contact Us</button>
+          </div>
+        </div>
+
+        <div style="width:420px; display:flex; flex-direction:column; align-items:flex-end; gap:12px; position:relative; z-index:2;">
+          <div class="thumbs-row" id="thumbsRow">
+            <div class="thumb active" data-index="0" style="background-image:url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=60');"></div>
+            <div class="thumb" data-index="1" style="background-image:url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=60');"></div>
+            <div class="thumb" data-index="2" style="background-image:url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=60');"></div>
+            <div class="thumb" data-index="3" style="background-image:url('/mnt/data/35ab12a9-f4de-4690-8047-bcc52f637078.png');"></div>
+          </div>
+
+          <div class="page-indicator">
+            <div style="color:rgba(255,255,255,0.85); font-weight:600; margin-right:8px">01</div>
+            <div class="indicator-bubble">01</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /site-wrap -->
+
+  <!-- ---------- main content (kept exactly as in the previous code you provided) ---------- -->
+  <main class="content">
+
+    <!-- Packages & Compact Chart -->
+    <section id="packages" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start" style="margin-top:26px;">
+      <div class="lg:col-span-2 space-y-4">
+        <div id="packageList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- package cards injected by JS -->
+        </div>
+      </div>
+
+      <!-- Compact bookings chart card (only one chart now) -->
+      <div class="glass p-4 rounded-lg shadow">
+        <h3 class="font-semibold mb-2">Bookings Overview</h3>
+
+        <!-- Chart container with constrained height -->
+        <div style="height:220px; max-height:220px; min-height:140px; width:100%;">
+          <canvas id="bookingsChart" style="width:100%; height:100%;"></canvas>
+        </div>
+
+        <div class="mt-3 text-xs text-white/70">Compact chart — updated to prevent long page height.</div>
+      </div>
+    </section>
+
+    <!-- Quick search + top picks -->
+    <section style="display:grid; grid-template-columns: 1fr 420px; gap:28px; align-items:start; margin-top:26px;">
+      <!-- left: short intro + package cards container -->
+      <div>
+        <div class="glass" style="padding:18px;">
+          <h2 style="font-size:20px; font-weight:700; margin:0 0 6px 0;">Plan. Explore. Book.</h2>
+          <p style="color:rgba(255,255,255,0.78); margin:0;">Quickly browse curated destinations and submit booking enquiries.</p>
+        </div>
+
+        <div id="packageListBelow" style="margin-top:16px; display:grid; grid-template-columns:repeat(2,1fr); gap:12px;">
+          <!-- duplicate or alternate listing (kept empty) -->
+        </div>
+      </div>
+
+      <!-- right: search card + transport filter (removed duplicate chart to free space) -->
+      <aside>
+        <div class="glass" style="padding:14px;">
+          <h3 style="margin:0 0 8px 0; font-weight:700;">Quick Search</h3>
+          <div style="margin-bottom:10px;">
+            <input id="searchInput" placeholder="Search destination or feature..." style="width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:white" />
+          </div>
+
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <select id="filterType" style="padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:white;">
+              <option value="all">All</option><option value="beach">Beach</option><option value="mountain">Mountain</option><option value="city">City</option>
+            </select>
+            <button id="searchBtn" class="btn-primary" style="padding:10px 14px;">Search</button>
+          </div>
+
+          <!-- transport mode quick filters -->
+          <div style="margin-top:8px;">
+            <div style="font-weight:700; margin-bottom:8px;">Filter by transport</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="small-pill" data-transport="all" onclick="filterByTransport('all')">All</button>
+              <button class="small-pill" data-transport="flight" onclick="filterByTransport('flight')">Flight</button>
+              <button class="small-pill" data-transport="train" onclick="filterByTransport('train')">Train</button>
+              <button class="small-pill" data-transport="bus" onclick="filterByTransport('bus')">Bus</button>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <h4 style="margin:0 0 8px 0; font-weight:600;">Top Picks</h4>
+            <ul id="topList" style="list-style:none; padding:0; margin:0; color:rgba(255,255,255,0.9)"></ul>
+          </div>
+        </div>
+
+        <!-- (Duplicate chart removed here) -->
+      </aside>
+    </section>
+
+    <!-- Destinations -->
+    <section id="destinations" style="margin-top:22px;">
+      <h2 style="font-weight:700;">Popular Destinations</h2>
+      <p style="color:rgba(255,255,255,0.75); margin-top:6px;">Click a destination to view packages & quick booking enquiry. New: Rooms & Transport info included.</p>
+      <div id="cards" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:12px;"></div>
+    </section>
+
+    <!-- Enquiry form -->
+    <section id="contact" style="margin-top:22px;">
+      <div class="glass" style="padding:16px;">
+        <h3 style="font-weight:700;">Make a Booking Enquiry</h3>
+        <p style="color:rgba(255,255,255,0.78); margin:6px 0 12px 0;">Fill this quick form — we'll save it locally (demo).</p>
+        <form id="enquiryForm" style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">
+          <input name="name" required placeholder="Your name" style="padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:white" />
+          <input name="email" type="email" placeholder="Email" style="padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:white" />
+          <select name="package" style="padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:white;">
+            <option value="">Select package</option>
+          </select>
+          <input name="phone" placeholder="Phone (optional)" style="padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:white" />
+          <textarea name="message" placeholder="Any special requests" style="padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:white; grid-column:1/3"></textarea>
+          <div style="grid-column:1/3; display:flex; gap:10px;">
+            <button type="submit" class="btn-primary">Submit Enquiry</button>
+            <button type="button" id="clearBtn" class="btn-ghost">Clear</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal extended: now shows rooms + transports -->
+  <div id="modal" class="hidden fixed inset-0 bg-black/60 items-center justify-center p-4 z-50">
+    <div class="glass" style="max-width:920px; width:100%;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px;">
+        <div>
+          <h3 id="modalTitle" style="color:white; font-weight:700">Package Title</h3>
+          <p id="modalSubtitle" style="color:rgba(255,255,255,0.8); margin:6px 0 0 0;">Subtitle</p>
+        </div>
+        <button id="closeModal" style="background:transparent; border:none; color:rgba(255,255,255,0.9); font-size:20px;">✕</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 360px; gap:14px; padding:10px;">
+        <div>
+          <img id="modalImg" src="" alt="" style="width:100%; height:220px; object-fit:cover; border-radius:8px; display:block" />
+          <p id="modalDesc" style="margin-top:10px; color:rgba(255,255,255,0.9)"></p>
+
+          <!-- features -->
+          <div id="modalFeatures" style="margin-top:8px; color:rgba(255,255,255,0.9)"></div>
+
+          <!-- Rooms list -->
+          <div style="margin-top:12px;">
+            <h4 style="margin:0 0 8px 0; font-weight:700;">Rooms near this destination</h4>
+            <div id="modalRooms" style="display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
+        </div>
+
+        <div style="background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.01)); border-radius:8px; padding:12px;">
+          <h4 style="margin-top:0; margin-bottom:10px; font-weight:700;">Available transport</h4>
+          <div id="modalTransports" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+          <div style="margin-top:12px;">
+            <div style="font-weight:700; margin-bottom:8px;">Quick actions</div>
+            <button id="modalEnquireBtn" style="width:100%; padding:10px; border-radius:8px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); border:none; color:white">Enquire about this package</button>
+            <div style="margin-top:8px; font-size:12px; color:rgba(255,255,255,0.72)">Click Reserve (room) or Select (transport) to prefill enquiry form.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ------------------ NEW FOOTER ------------------ -->
+  <footer class="site-footer" role="contentinfo" aria-label="Footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <h4>About Us</h4>
+        <div class="footer-underline" aria-hidden="true"></div>
+        <p class="footer-text">We are passionate about exploring and documenting the world's most beautiful destinations — handpicked packages, immersive experiences and curated stays for every traveller.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <div class="footer-underline" aria-hidden="true"></div>
+        <ul class="footer-links" aria-label="Quick links">
+          <li><a href="#packages">Home</a></li>
+          <li><a href="#packages">Packages</a></li>
+          <li><a href="#destinations">Destinations</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Connect With Us</h4>
+        <div class="footer-underline" aria-hidden="true"></div>
+        <ul class="footer-links" aria-label="Social links">
+          <li><a href="#" rel="noopener">Instagram</a></li>
+          <li><a href="#" rel="noopener">Facebook</a></li>
+          <li><a href="#" rel="noopener">Twitter</a></li>
+          <li><a href="#" rel="noopener">YouTube</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom" role="note">
+      © <span id="footer-year"></span> TravelWise. All rights reserved.
+    </div>
+  </footer>
+  <!-- ------------------ END FOOTER ------------------ -->
+
+  <footer style="color:rgba(255,255,255,0.6); text-align:center; margin:34px 0 24px 0; display:none;">Built for demo — good luck at the hackathon!</footer>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    // set footer year
+    document.getElementById('footer-year').textContent = new Date().getFullYear();
+
+    /***** DATA (DESTINATIONS + PACKAGES) - now includes rooms & transport *****/
+    const DESTINATIONS = [
+      {
+        id: 'bali',
+        name: 'Bali, Indonesia',
+        type:'beach',
+        price: 700,
+        rating:4.7,
+        img:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=60',
+        summary:'Beaches, rice terraces, temples.',
+        rooms: [
+          {id:'r-bali-1', name:'Sea View Villa', type:'Villa', price:120, rating:4.8},
+          {id:'r-bali-2', name:'Budget Bungalow', type:'Bungalow', price:40, rating:4.1}
+        ],
+        transports: [
+          {mode:'flight', provider:'AirAsia', duration:'6h', price:420},
+          {mode:'train', provider:'N/A', duration:'—', price:null},
+          {mode:'bus', provider:'Local Shuttle', duration:'—', price:20}
+        ]
+      },
+      {
+        id: 'manali',
+        name: 'Manali, India',
+        type:'mountain',
+        price: 350,
+        rating:4.5,
+        img:'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=60',
+        summary:'Hills, adventure sports, cosy stays.',
+        rooms: [
+          {id:'r-manali-1', name:'Riverside Cottage', type:'Cottage', price:65, rating:4.6},
+          {id:'r-manali-2', name:'Mountain Homestay', type:'Homestay', price:30, rating:4.3}
+        ],
+        transports: [
+          {mode:'flight', provider:'GoAir + Road', duration:'4h + 5h', price:220},
+          {mode:'train', provider:'Nearest Rail', duration:'10h', price:40},
+          {mode:'bus', provider:'State Bus', duration:'12h', price:25}
+        ]
+      },
+      {
+        id: 'paris',
+        name: 'Paris, France',
+        type:'city',
+        price: 1200,
+        rating:4.8,
+        img:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=60',
+        summary:'Culture, food, iconic sights.',
+        rooms: [
+          {id:'r-paris-1', name:'Central Studio', type:'Studio', price:210, rating:4.7},
+          {id:'r-paris-2', name:'Boutique Hotel', type:'Hotel', price:320, rating:4.9}
+        ],
+        transports: [
+          {mode:'flight', provider:'Air France', duration:'9h', price:850},
+          {mode:'train', provider:'Eurostar', duration:'2h30', price:120},
+          {mode:'bus', provider:'Intercity Coach', duration:'—', price:50}
+        ]
+      },
+      {
+        id: 'swiss',
+        name: 'Swiss Alps',
+        type:'mountain',
+        price: 1500,
+        rating:4.9,
+        img:'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=60',
+        summary:'Snow peaks and pristine lakes.',
+        rooms:[ {id:'r-swiss-1', name:'Alpine Chalet', type:'Chalet', price:480, rating:4.9} ],
+        transports:[
+          {mode:'flight', provider:'Swiss Air', duration:'11h', price:1200},
+          {mode:'train', provider:'Scenic Rail', duration:'6h', price:220}
+        ]
+      },
+      {
+        id: 'goa',
+        name: 'Goa, India',
+        type:'beach',
+        price: 200,
+        rating:4.4,
+        img:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=60',
+        summary:'Beaches, nightlife, seafood.',
+        rooms:[
+          {id:'r-goa-1', name:'Beach Hut', type:'Hut', price:50, rating:4.3},
+          {id:'r-goa-2', name:'Resort Suite', type:'Suite', price:140, rating:4.6}
+        ],
+        transports:[
+          {mode:'flight', provider:'IndiGo', duration:'3h', price:90},
+          {mode:'train', provider:'Express', duration:'10h', price:40},
+          {mode:'bus', provider:'Luxury Coach', duration:'12h', price:25}
+        ]
+      }
+    ];
+
+    const PACKAGES = [
+      {id:'p1', title:'Bali 5D/4N', dest:'bali', price:700, days:5, features:['Hotel stay','Airport transfer','2 island tours']},
+      {id:'p2', title:'Manali Adventure 4D', dest:'manali', price:350, days:4, features:['Paragliding option','Guided trek','Homestay']},
+      {id:'p3', title:'Paris Romantic 6D', dest:'paris', price:1200, days:6, features:['City tour','Seine cruise','Breakfast included']},
+      {id:'p4', title:'Swiss Escape 7D', dest:'swiss', price:1500, days:7, features:['Ski pass','Mountain train','Lake cruise']},
+      {id:'p5', title:'Goa Quick 3D', dest:'goa', price:200, days:3, features:['Beach hut','Water sports','Party pass']}
+    ];
+
+    /***** Rendering helpers (packages, cards, top picks) *****/
+    function renderTopPicks(){
+      const list = document.getElementById('topList'); if(!list) return; list.innerHTML='';
+      DESTINATIONS.slice(0,3).forEach(d=>{
+        const li = document.createElement('li');
+        li.innerHTML = `<button class="w-full text-left p-2 rounded" style="background:transparent; color:rgba(255,255,255,0.92); border:none">${d.name} — ${d.type} • $${d.price}</button>`;
+        li.querySelector('button').onclick = ()=> openModalByDest(d.id);
+        list.appendChild(li);
+      });
+    }
+
+    function renderDestinations(filter='', q=''){
+      const container = document.getElementById('cards'); if(!container) return; container.innerHTML='';
+      const results = DESTINATIONS.filter(d=> (filter==='all' || !filter) ? true : d.type===filter)
+        .filter(d=> d.name.toLowerCase().includes(q.toLowerCase()) || d.summary.toLowerCase().includes(q.toLowerCase()));
+      if(results.length===0) container.innerHTML = '<div style="color:rgba(255,255,255,0.8)">No results — try another filter.</div>';
+      results.forEach(d=>{
+        const card = document.createElement('div');
+        card.className = 'package-card';
+        card.innerHTML = `
+          <img src="${d.img}" alt="${d.name}" style="width:100%; height:160px; object-fit:cover; border-radius:8px; display:block" />
+          <div style="padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+              <div>
+                <h3 style="font-weight:700; margin:0; color:white">${d.name}</h3>
+                <div style="color:rgba(255,255,255,0.78); font-size:13px; margin-top:6px">${d.summary}</div>
+                <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                  ${d.transports.slice(0,3).map(t=>`<span class="small-pill" title="${t.provider}">${t.mode.toUpperCase()}</span>`).join(' ')}
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="color:var(--accent1); font-weight:700">$${d.price}</div>
+                <div style="color:rgba(255,255,255,0.75); font-size:12px">${d.rating} ★</div>
+              </div>
+            </div>
+            <div style="margin-top:10px; display:flex; gap:8px;">
+              <button onclick="openModalByDest('${d.id}')" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:white">View</button>
+              <button onclick="prefillEnquiry('${d.id}')" style="padding:8px 12px; border-radius:8px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:white">Enquire</button>
+            </div>
+          </div>`;
+        container.appendChild(card);
+      });
+    }
+
+    function renderPackages(){
+      const container = document.getElementById('packageList'); if(!container) return; container.innerHTML='';
+      PACKAGES.forEach(p=>{
+        const dest = DESTINATIONS.find(d=> d.id===p.dest) || {name: 'Unknown'};
+        const el = document.createElement('div'); el.className='package-card';
+        el.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:700">${p.title}</div>
+            <div style="color:rgba(255,255,255,0.75); font-size:12px">${dest.name} • ${p.days} days</div>
+          </div>
+          <div style="text-align:right">
+            <div style="color:var(--accent1); font-weight:700">$${p.price}</div>
+            <div style="margin-top:8px; display:flex; gap:8px">
+              <button onclick="openModal('${p.id}')" style="padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:white">Details</button>
+              <button onclick="openModal('${p.id}', true)" style="padding:6px 10px; border-radius:8px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:white">Enquire</button>
+            </div>
+          </div>
+        </div>`;
+        container.appendChild(el);
+      });
+
+      const sel = document.querySelector('select[name=package]'); if(sel) sel.innerHTML = '<option value="">Select package</option>' + PACKAGES.map(p=>`<option value="${p.id}">${p.title} — $${p.price}</option>`).join('');
+    }
+
+    // Modal logic (extended with rooms & transports)
+    const modal = document.getElementById('modal');
+    document.getElementById('closeModal').onclick = ()=> modal.classList.add('hidden');
+
+    // helper: create room card HTML
+    function roomHtml(room, destId, pkgId){
+      return `<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px; border-radius:8px; background:rgba(255,255,255,0.02);">
+        <div>
+          <div style="font-weight:700">${room.name}</div>
+          <div style="font-size:12px; color:rgba(255,255,255,0.8)">${room.type} • ${room.rating} ★</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:700; color:var(--accent1)">$${room.price}/night</div>
+          <div style="margin-top:8px"><button onclick="reserveRoom('${destId}','${room.id}','${pkgId}')" style="padding:6px 8px; border-radius:8px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); border:none; color:white">Reserve</button></div>
+        </div>
+      </div>`;
+    }
+
+    // helper: create transport HTML
+    function transportHtml(t, destId, pkgId){
+      return `<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px; border-radius:8px; background:rgba(255,255,255,0.02);">
+        <div>
+          <div style="font-weight:700">${t.mode.toUpperCase()} — ${t.provider}</div>
+          <div style="font-size:12px; color:rgba(255,255,255,0.8)">${t.duration} • ${t.price ? ('$'+t.price) : 'Price on request'}</div>
+        </div>
+        <div style="text-align:right">
+          <div><button onclick="selectTransport('${destId}','${t.mode}','${pkgId}')" style="padding:6px 8px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.06); color:white">Select</button></div>
+        </div>
+      </div>`;
+    }
+
+    // open modal by package id (existing)
+    function openModal(id, openEnquire=false){
+      const p = PACKAGES.find(x=> x.id===id);
+      if(!p) return;
+      const dest = DESTINATIONS.find(d=> d.id===p.dest) || {};
+      document.getElementById('modalTitle').textContent = p.title;
+      document.getElementById('modalSubtitle').textContent = dest.name || '';
+      document.getElementById('modalImg').src = dest.img || '';
+      document.getElementById('modalDesc').textContent = dest.summary || '';
+      document.getElementById('modalFeatures').innerHTML = '<ul style="margin:6px 0 0 16px; color:rgba(255,255,255,0.9)">' + p.features.map(f=>`<li>${f}</li>`).join('') + '</ul>';
+
+      // rooms
+      const roomsContainer = document.getElementById('modalRooms'); roomsContainer.innerHTML = '';
+      (dest.rooms || []).forEach(r => roomsContainer.insertAdjacentHTML('beforeend', roomHtml(r, dest.id, p.id)));
+
+      // transports
+      const transContainer = document.getElementById('modalTransports'); transContainer.innerHTML = '';
+      (dest.transports || []).forEach(t => transContainer.insertAdjacentHTML('beforeend', transportHtml(t, dest.id, p.id)));
+
+      // modal enquire button prefill
+      document.getElementById('modalEnquireBtn').onclick = ()=> { prefillEnquiry(dest.id, p.id); modal.classList.add('hidden'); };
+
+      modal.classList.remove('hidden');
+      if(openEnquire) prefillEnquiry(p.dest, p.id);
+    }
+
+    // open modal by destination -> pick first package for that destination
+    function openModalByDest(destId){
+      const p = PACKAGES.find(x=> x.dest===destId) || PACKAGES[0];
+      openModal(p.id);
+    }
+
+    // Reserve a room -> prefill enquiry form (room info)
+    function reserveRoom(destId, roomId, pkgId){
+      const dest = DESTINATIONS.find(d=> d.id===destId);
+      const room = (dest.rooms || []).find(r=> r.id===roomId);
+      prefillEnquiry(destId, pkgId);
+      // attach room detail into message textarea
+      const textarea = document.querySelector('textarea[name=message]');
+      if(textarea){
+        textarea.value = `Interested in reserving: ${room.name} (${room.type}) — $${room.price}/night\n`;
+        textarea.focus();
+      }
+      modal.classList.add('hidden');
+    }
+
+    // Select transport -> prefill enquiry with transport info
+    function selectTransport(destId, transportMode, pkgId){
+      const dest = DESTINATIONS.find(d=> d.id===destId);
+      const t = (dest.transports || []).find(x=> x.mode===transportMode);
+      prefillEnquiry(destId, pkgId);
+      const textarea = document.querySelector('textarea[name=message]');
+      if(textarea){
+        textarea.value = `Preferred transport: ${t.mode.toUpperCase()} with ${t.provider} — ${t.duration} — ${t.price ? ('$'+t.price) : 'price TBD'}\n`;
+        textarea.focus();
+      }
+      modal.classList.add('hidden');
+    }
+
+    // Quick prefill function (unchanged except highlighting)
+    function prefillEnquiry(destId, packageId){
+      const pkg = PACKAGES.find(p=> p.id===packageId) || PACKAGES.find(p=> p.dest===destId);
+      if(pkg && document.querySelector('select[name=package]')) document.querySelector('select[name=package]').value = pkg.id;
+      window.location.hash = '#contact';
+      setTimeout(()=> document.querySelector('input[name=name]')?.focus(), 200);
+    }
+
+    // Enquiry handling (unchanged)
+    const form = document.getElementById('enquiryForm');
+    form?.addEventListener('submit', e=>{
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(form).entries());
+      const store = JSON.parse(localStorage.getItem('enquiries')||'[]');
+      store.push({...data, timestamp: new Date().toISOString()});
+      localStorage.setItem('enquiries', JSON.stringify(store));
+      alert('Enquiry saved locally (demo). Good luck!');
+      form.reset();
+      updateChart();
+    });
+    document.getElementById('clearBtn')?.addEventListener('click', ()=> { form.reset(); localStorage.removeItem('enquiries'); updateChart(); });
+
+    // Search behavior (unchanged)
+    document.getElementById('searchBtn')?.addEventListener('click', ()=> {
+      const q = document.getElementById('searchInput')?.value || '';
+      const filter = document.getElementById('filterType')?.value || '';
+      renderDestinations(filter, q);
+    });
+
+    // Filter by transport quick buttons
+    function filterByTransport(mode){
+      if(mode === 'all'){ renderDestinations(); return; }
+      // show only destinations that have this transport mode
+      const container = document.getElementById('cards'); if(!container) return; container.innerHTML='';
+      const results = DESTINATIONS.filter(d=> (d.transports || []).some(t=> t.mode === mode));
+      if(results.length===0) container.innerHTML = '<div style="color:rgba(255,255,255,0.8)">No results — try another filter.</div>';
+      results.forEach(d=>{
+        const card = document.createElement('div');
+        card.className = 'package-card';
+        card.innerHTML = `
+          <img src="${d.img}" alt="${d.name}" style="width:100%; height:160px; object-fit:cover; border-radius:8px; display:block" />
+          <div style="padding:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:start;">
+              <div>
+                <h3 style="font-weight:700; margin:0; color:white">${d.name}</h3>
+                <div style="color:rgba(255,255,255,0.78); font-size:13px; margin-top:6px">${d.summary}</div>
+              </div>
+              <div style="text-align:right">
+                <div style="color:var(--accent1); font-weight:700">$${d.price}</div>
+                <div style="color:rgba(255,255,255,0.75); font-size:12px">${d.rating} ★</div>
+              </div>
+            </div>
+            <div style="margin-top:10px; display:flex; gap:8px;">
+              <button onclick="openModalByDest('${d.id}')" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:white">View</button>
+              <button onclick="prefillEnquiry('${d.id}')" style="padding:8px 12px; border-radius:8px; background:linear-gradient(90deg,var(--accent1),var(--accent2)); color:white">Enquire</button>
+            </div>
+          </div>`;
+        container.appendChild(card);
+      });
+    }
+
+    // Chart — now only one chart instance; integer y-axis
+    let bookingsChart;
+    function updateChart(){
+      const data = JSON.parse(localStorage.getItem('enquiries')||'[]');
+      const counts = {};
+      data.forEach(e=>{
+        const pkg = PACKAGES.find(p=> p.id===e.package);
+        const dest = (pkg && DESTINATIONS.find(d=> d.id===pkg.dest)) ? DESTINATIONS.find(d=> d.id===pkg.dest).name : e.package || 'Unknown';
+        counts[dest] = (counts[dest]||0)+1;
+      });
+      const labels = Object.keys(counts).length ? Object.keys(counts) : DESTINATIONS.map(d=>d.name);
+      const values = Object.keys(counts).length ? Object.values(counts) : DESTINATIONS.map(_=>0);
+
+      const maxVal = Math.max(...values, 1);
+      const suggestedMax = Math.ceil(maxVal + Math.max(1, Math.ceil(maxVal * 0.3)));
+      const step = 1;
+
+      const ctx = document.getElementById('bookingsChart').getContext('2d');
+      if(bookingsChart) bookingsChart.destroy();
+      bookingsChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Enquiries', data: values, backgroundColor: labels.map(()=> 'rgba(255,122,162,0.9)'), borderRadius:6 }] },
+        options: {
+          responsive:true,
+          maintainAspectRatio:false,
+          plugins:{ legend:{ display:false }, tooltip:{ mode:'index', intersect:false } },
+          scales:{
+            x:{ ticks:{ color:'#fff' }, grid:{ display:false } },
+            y:{
+              beginAtZero:true,
+              suggestedMax: suggestedMax,
+              ticks:{ color:'#fff', stepSize: step },
+              grid:{ color:'rgba(255,255,255,0.04)' }
+            }
+          },
+          elements:{ bar:{ maxBarThickness:36 } },
+          layout:{ padding:{ top:6, bottom:6, left:6, right:6 } }
+        }
+      });
+    }
+
+    // Thumbnails interaction: change hero background when clicking thumbs (keeps same)
+    document.querySelectorAll('.thumb').forEach(t=>{
+      t.addEventListener('click', ()=>{
+        const idx = t.getAttribute('data-index') || 0;
+        const map = [
+          'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+          'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80',
+          '/mnt/data/35ab12a9-f4de-4690-8047-bcc52f637078.png'
+        ];
+        document.querySelector('.hero-bg-decor').style.backgroundImage = `url('${map[idx % map.length]}')`;
+        document.querySelectorAll('.thumb').forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+      });
+    });
+
+    // tiny parallax hover on hero for premium feel (keeps same)
+    const heroCard = document.querySelector('.hero-card');
+    heroCard?.addEventListener('pointermove', (e)=>{
+      const r = heroCard.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      const bg = document.querySelector('.hero-bg-decor');
+      if(bg) bg.style.transform = `translate3d(${px * -8}px, ${py * -6}px, 0) scale(1.04)`;
+    });
+    heroCard?.addEventListener('pointerleave', ()=> {
+      const bg = document.querySelector('.hero-bg-decor');
+      if(bg) bg.style.transform = 'translate3d(0,0,0) scale(1.03)';
+    });
+
+    // Initialize UI
+    renderTopPicks(); renderDestinations(); renderPackages(); updateChart();
+
+  </script>
+</body>
+</html>
